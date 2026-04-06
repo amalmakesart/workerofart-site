@@ -162,7 +162,7 @@
         <div id="card-element"></div>
         <div id="card-errors"></div>
       </div>
-      <button id="submit-btn" type="submit">PAY $30 — GET VERIFIED</button>
+      <button id="submit-btn" type="submit">PAY $20 — GET VERIFIED</button>
       <p class="secure-note">SECURED BY STRIPE · CANCEL ANYTIME</p>
     </form>
   </div>
@@ -225,7 +225,7 @@
       if (result.error) {
         document.getElementById('card-errors').textContent = result.error.message;
         btn.disabled = false;
-        btn.textContent = 'PAY $30 — GET VERIFIED';
+        btn.textContent = 'PAY $20 — GET VERIFIED';
       } else {
         // Payment succeeded
         document.getElementById('payment-section').style.display = 'none';
@@ -238,7 +238,7 @@
     } catch (err) {
       document.getElementById('card-errors').textContent = 'SOMETHING WENT WRONG. PLEASE TRY AGAIN.';
       btn.disabled = false;
-      btn.textContent = 'PAY $30 — GET VERIFIED';
+      btn.textContent = 'PAY $20 — GET VERIFIED';
     }
   });
 </script>
