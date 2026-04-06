@@ -206,7 +206,7 @@
     try {
       const res = await fetch('https://tehkoxslqtgofivlcdyk.supabase.co/functions/v1/create-checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlaGtveHNscXRnb2ZpdmxjZHlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxODc1MTAsImV4cCI6MjA5MDc2MzUxMH0.QcPHGGF4HRzKWCv0CgEg2qh7vcbEsLLJd4Xh7LIYE4Y', 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlaGtveHNscXRnb2ZpdmxjZHlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxODc1MTAsImV4cCI6MjA5MDc2MzUxMH0.QcPHGGF4HRzKWCv0CgEg2qh7vcbEsLLJd4Xh7LIYE4Y' },
         body: JSON.stringify({
           type: 'gig',
           user_id: userId,
@@ -240,11 +240,11 @@
         }
       }
     } catch (err) {
-      document.getElementById('card-errors').textContent = 'SOMETHING WENT WRONG. PLEASE TRY AGAIN.';
+      document.getElementById('card-errors').textContent = err.message ?? 'SOMETHING WENT WRONG. PLEASE TRY AGAIN.';
       btn.disabled = false;
       btn.textContent = `PAY ${PRICES[currentTier].amount} — POST GIG`;
     }
   });
 </script>
 </body>
-</html>
+</html> 

@@ -143,7 +143,7 @@
     <h1>GET VERIFIED</h1>
 
     <div class="price-row">
-      <span class="price">$20</span>
+      <span class="price">$30</span>
       <span class="price-period">/ YEAR</span>
     </div>
 
@@ -162,7 +162,7 @@
         <div id="card-element"></div>
         <div id="card-errors"></div>
       </div>
-      <button id="submit-btn" type="submit">PAY $20 — GET VERIFIED</button>
+      <button id="submit-btn" type="submit">PAY $30 — GET VERIFIED</button>
       <p class="secure-note">SECURED BY STRIPE · CANCEL ANYTIME</p>
     </form>
   </div>
@@ -207,7 +207,7 @@
       // Create subscription via Supabase Edge Function
       const res = await fetch('https://tehkoxslqtgofivlcdyk.supabase.co/functions/v1/create-checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlaGtveHNscXRnb2ZpdmxjZHlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxODc1MTAsImV4cCI6MjA5MDc2MzUxMH0.QcPHGGF4HRzKWCv0CgEg2qh7vcbEsLLJd4Xh7LIYE4Y', 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlaGtveHNscXRnb2ZpdmxjZHlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxODc1MTAsImV4cCI6MjA5MDc2MzUxMH0.QcPHGGF4HRzKWCv0CgEg2qh7vcbEsLLJd4Xh7LIYE4Y' },
         body: JSON.stringify({
           type: 'verified',
           user_id: userId,
@@ -225,7 +225,7 @@
       if (result.error) {
         document.getElementById('card-errors').textContent = result.error.message;
         btn.disabled = false;
-        btn.textContent = 'PAY $20 — GET VERIFIED';
+        btn.textContent = 'PAY $30 — GET VERIFIED';
       } else {
         // Payment succeeded
         document.getElementById('payment-section').style.display = 'none';
@@ -236,9 +236,9 @@
         }
       }
     } catch (err) {
-      document.getElementById('card-errors').textContent = 'SOMETHING WENT WRONG. PLEASE TRY AGAIN.';
+      document.getElementById('card-errors').textContent = err.message ?? 'SOMETHING WENT WRONG. PLEASE TRY AGAIN.';
       btn.disabled = false;
-      btn.textContent = 'PAY $20 — GET VERIFIED';
+      btn.textContent = 'PAY $30 — GET VERIFIED';
     }
   });
 </script>
