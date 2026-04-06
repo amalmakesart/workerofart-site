@@ -1,100 +1,1209 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WORK(ER) OF ART</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-);
+  :root {
+    --black: #000000;
+    --white: #ffffff;
+    --red: #c0392b;
+    --red-bright: #e74c3c;
+    --dim: #888880;
+    --border: rgba(255,255,255,0.15);
+    --font: 'Space Mono', 'Courier Prime', monospace;
+  }
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
-};
+  html { scroll-behavior: smooth; }
 
-async function verifyStripeSignature(body: string, signature: string, secret: string): Promise<boolean> {
-  const parts = signature.split(',');
-  const timestamp = parts.find(p => p.startsWith('t='))?.split('=')[1];
-  const v1 = parts.find(p => p.startsWith('v1='))?.split('=')[1];
-  if (!timestamp || !v1) return false;
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: var(--font);
+    font-size: 13px;
+    line-height: 1.6;
+    cursor: crosshair;
+    overflow-x: hidden;
+  }
 
-  const payload = `${timestamp}.${body}`;
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    'raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-  );
-  const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(payload));
-  const expected = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
-  return expected === v1;
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(0,0,0,0.92);
+    backdrop-filter: blur(8px);
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .logo-box {
+    border: 1px solid var(--white);
+    width: 52px;
+    height: 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 0 7px;
+    font-size: 7.5px;
+    letter-spacing: 0.08em;
+    font-weight: 400;
+    color: var(--white);
+    line-height: 1.7;
+    text-align: left;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    font-family: 'Courier Prime', monospace;
+  }
+
+  .logo-box-lg {
+  border: 2px solid var(--white);
+  width: clamp(250px, 18vw, 240px);
+  height: clamp(250px, 18vw, 240px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0 clamp(16px, 2vw, 28px);
+  font-size: clamp(16px, 1.7vw, 24px);
+  letter-spacing: 0.08em;
+  font-weight: 400;
+  color: var(--white);
+  line-height: 1.4;
+  text-align: left;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-family: 'Courier Prime', monospace;
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+  .logo-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--red);
+    margin-left: 4px;
+    vertical-align: middle;
   }
 
-  const signature = req.headers.get('stripe-signature') ?? '';
-  const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') ?? '';
-  const body = await req.text();
+  .nav-links {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+  }
 
-  const valid = await verifyStripeSignature(body, signature, webhookSecret);
-  if (!valid) {
-    console.error('Invalid webhook signature');
-    return new Response(JSON.stringify({ error: 'Invalid signature' }), {
-      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  .nav-links a {
+    color: var(--dim);
+    text-decoration: none;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--white); }
+
+  .nav-cta {
+    border: 1px solid var(--red);
+    color: var(--red) !important;
+    padding: 8px 18px;
+    letter-spacing: 0.1em;
+    transition: background 0.2s, color 0.2s !important;
+  }
+
+  .nav-cta:hover {
+    background: var(--red) !important;
+    color: var(--white) !important;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 40px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.75) 60%, #000 100%);
+    z-index: 1;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 900px;
+    padding-top: 120px;
+  }
+
+  .hero-scroll {
+    position: absolute;
+    bottom: 32px;
+    right: 40px;
+    z-index: 2;
+  }
+
+  .hero-video {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transform: translate(-50%, -50%);
+    opacity: 0.6;
+    z-index: 0;
+  }
+
+  .hero-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--red);
+    margin-bottom: 28px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.2s;
+  }
+
+  .hero-title {
+    font-size: clamp(52px, 8vw, 110px);
+    font-weight: 700;
+    line-height: 0.92;
+    letter-spacing: -0.01em;
+    margin-bottom: 36px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.4s;
+  }
+
+  .hero-title em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--dim);
+  }
+
+  .hero-sub {
+    font-size: 13px;
+    color: var(--dim);
+    max-width: 480px;
+    line-height: 1.8;
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.6s;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.8s;
+  }
+
+  .btn-primary {
+    border: 1px solid var(--white);
+    color: var(--white);
+    background: transparent;
+    padding: 14px 32px;
+    font-family: var(--font);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s;
+    display: inline-block;
+  }
+
+  .btn-primary:hover { background: var(--white); color: var(--black); }
+
+  .btn-red {
+    border: 1px solid var(--red);
+    color: var(--red);
+    background: transparent;
+    padding: 14px 32px;
+    font-family: var(--font);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+    display: inline-block;
+  }
+
+  .btn-red:hover { background: var(--red); color: var(--white); }
+
+  .hero-scroll {
+    position: absolute;
+    bottom: 32px;
+    right: 40px;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--dim);
+    writing-mode: vertical-rl;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 2;
+  }
+
+  .hero-scroll::before {
+    content: '';
+    display: block;
+    width: 1px;
+    height: 60px;
+    background: var(--dim);
+    animation: scrollLine 1.6s ease-in-out infinite;
+  }
+
+  @keyframes scrollLine {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+
+  /* ── TICKER ── */
+  .ticker {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .ticker-track {
+    display: inline-flex;
+    animation: ticker 22s linear infinite;
+  }
+
+  .ticker-item {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--dim);
+    padding: 0 36px;
+  }
+
+  .ticker-item span {
+    color: var(--red);
+    margin-right: 8px;
+  }
+
+  @keyframes ticker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* ── SECTIONS ── */
+  section {
+    padding: 100px 40px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: var(--dim);
+    margin-bottom: 60px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+    max-width: 120px;
+  }
+
+  /* ── ARTIST DIRECTORY ── */
+  .directory-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+
+  .directory-title {
+    font-size: clamp(28px, 4vw, 52px);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .filter-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+
+  .filter-select {
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--dim);
+    font-family: var(--font);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    padding: 10px 36px 10px 16px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888880' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    min-width: 160px;
+  }
+
+  .filter-select:hover, .filter-select:focus {
+    border-color: var(--white);
+    color: var(--white);
+    outline: none;
+  }
+
+  .filter-select option {
+    background: #111;
+    color: var(--white);
+  }
+
+  .artist-count {
+    font-size: 11px;
+    color: var(--dim);
+    margin-bottom: 24px;
+    letter-spacing: 0.08em;
+  }
+
+  .artist-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+
+  .artist-card {
+    position: relative;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    cursor: pointer;
+    border: 0.5px solid rgba(255,255,255,0.06);
+  }
+
+  .artist-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.75);
+    transition: filter 0.4s, transform 0.5s;
+  }
+
+  .artist-card:hover img {
+    filter: brightness(0.55);
+    transform: scale(1.04);
+  }
+
+  .artist-info {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 16px 12px 14px;
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
+  }
+
+  .artist-name {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  .artist-type {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--dim);
+    display: block;
+  }
+
+  .artist-city {
+    position: absolute;
+    bottom: 14px;
+    right: 12px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--red);
+  }
+
+  .artist-posts {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+  }
+
+  .see-all-row {
+    display: flex;
+    justify-content: center;
+    padding: 40px 0 0;
+  }
+
+  /* ── FEATURES ── */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
+  }
+
+  .feature-item {
+    padding: 48px 40px;
+    border: 0.5px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+  }
+
+  .feature-item:hover { background: rgba(255,255,255,0.02); }
+
+  .feature-num {
+    font-size: 11px;
+    color: var(--red);
+    letter-spacing: 0.1em;
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  .feature-name {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-bottom: 14px;
+    line-height: 1.2;
+  }
+
+  .feature-desc {
+    font-size: 12px;
+    color: var(--dim);
+    line-height: 1.8;
+  }
+
+  /* ── GIGS ── */
+  .gigs-section { }
+
+  .gig-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 28px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: padding-left 0.2s;
+    gap: 20px;
+  }
+
+  .gig-row:hover { padding-left: 12px; }
+
+  .gig-row:first-of-type { border-top: 1px solid var(--border); }
+
+  .gig-left { flex: 1; }
+
+  .gig-title {
+    font-size: clamp(16px, 2.5vw, 26px);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .gig-meta {
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+  }
+
+  .gig-right {
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .gig-budget {
+    font-size: 18px;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .gig-interested {
+    font-size: 11px;
+    color: var(--red);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── FEATURES TAB (editorial) ── */
+  .editorial-hero {
+    position: relative;
+    width: 100%;
+    height: 520px;
+    overflow: hidden;
+    margin-bottom: 2px;
+  }
+
+  .editorial-hero img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.55);
+  }
+
+  .editorial-hero-info {
+    position: absolute;
+    bottom: 0; left: 0;
+    padding: 32px 40px;
+    width: 100%;
+    background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, transparent 100%);
+  }
+
+  .ep-label {
+    font-size: 11px;
+    color: var(--red);
+    letter-spacing: 0.15em;
+    margin-bottom: 8px;
+  }
+
+  .ep-title {
+    font-size: clamp(24px, 4vw, 48px);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    margin-bottom: 6px;
+  }
+
+  .ep-location {
+    font-size: 12px;
+    color: var(--dim);
+    letter-spacing: 0.1em;
+  }
+
+  .play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 64px; height: 64px;
+    border: 2px solid var(--red);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .play-btn:hover { background: rgba(192,57,43,0.2); }
+
+  .play-btn svg { margin-left: 4px; }
+
+  .ep-list {
+    border-top: 1px solid var(--border);
+  }
+
+  .ep-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: padding-left 0.2s;
+  }
+
+  .ep-item:hover { padding-left: 10px; }
+
+  .ep-thumb {
+    width: 80px; height: 80px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .ep-item-info { flex: 1; }
+
+  .ep-item-num {
+    font-size: 10px;
+    color: var(--red);
+    letter-spacing: 0.12em;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .ep-item-title {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .ep-item-loc {
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── HOW IT WORKS ── */
+  .how-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-top: 60px;
+  }
+
+  .how-item {
+    padding: 40px 32px;
+    border-left: 1px solid var(--border);
+  }
+
+  .how-item:first-child { border-left: none; }
+
+  .how-num {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--border);
+    line-height: 1;
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  .how-title {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .how-desc {
+    font-size: 11px;
+    color: var(--dim);
+    line-height: 1.8;
+  }
+
+  /* ── CTA ── */
+  .cta-section {
+    padding: 120px 40px;
+    text-align: center;
+    border-bottom: none;
+  }
+
+  .cta-title {
+    font-size: clamp(36px, 6vw, 80px);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 0.95;
+    margin-bottom: 32px;
+  }
+
+  .cta-title em { font-style: italic; color: var(--dim); }
+
+  .cta-sub {
+    font-size: 13px;
+    color: var(--dim);
+    margin-bottom: 48px;
+    line-height: 1.8;
+  }
+
+  .store-badges {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .store-badge {
+    border: 1px solid var(--white);
+    padding: 14px 28px;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--white);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.2s;
+  }
+
+  .store-badge:hover { background: var(--white); color: var(--black); }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 40px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .footer-copy {
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 28px;
+    list-style: none;
+  }
+
+  .footer-links a {
+    font-size: 11px;
+    color: var(--dim);
+    text-decoration: none;
+    letter-spacing: 0.08em;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--white); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── MOBILE ── */
+  @media (max-width: 768px) {
+    nav { padding: 16px 20px; }
+    .nav-links { display: none; }
+    section { padding: 70px 20px; }
+    .hero { padding: 0 20px 70px; }
+    .artist-grid { grid-template-columns: repeat(2, 1fr); }
+    .features-grid { grid-template-columns: 1fr; }
+    .how-grid { grid-template-columns: repeat(2, 1fr); }
+    .how-item:nth-child(3) { border-left: none; }
+    footer { padding: 32px 20px; flex-direction: column; align-items: flex-start; }
+    .hero-scroll { display: none; }
+    .editorial-hero { height: 320px; }
+    .cta-section { padding: 80px 20px; }
+    .filter-bar { gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="logo-box">WORK(ER)<br><span style="display:inline-flex;align-items:center;gap:3px;">OF ART <span class="logo-dot"></span></span></div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#artists">ARTISTS</a></li>
+    <li><a href="#gigs">GIGS</a></li>
+    <li><a href="#features">FEATURES</a></li>
+    <li><a href="#how">HOW IT WORKS</a></li>
+    <li><a href="#download" class="nav-cta">GET THE APP</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <video autoplay muted loop playsinline class="hero-video">
+    <source src="header-video.mp4" type="video/mp4">
+  </video>
+
+  <div class="hero-content">
+    <p class="hero-eyebrow">● THE ULTIMATE ART PLATFORM</p>
+    <div style="display:flex;align-items:flex-start;gap:clamp(20px,3vw,48px);margin-bottom:36px;">
+      <div class="logo-box-lg">WORK(ER)<br><span style="display:inline-flex;align-items:center;gap:4px;">OF ART <span class="logo-dot" style="width:clamp(8px,1vw,13px);height:clamp(8px,1vw,13px);flex-shrink:0;"></span></span></div>
+      <h1 class="hero-title" style="margin-bottom:0;text-align:left;">
+        WHERE ART<br><em>FINDS</em> ITS<br>WORK.
+      </h1>
+    </div>
+    <p class="hero-sub">
+      DISCOVER ARTISTS. POST GIGS. BUILD YOUR PORTFOLIO.<br>
+      THE PLATFORM BUILT FOR EVERY ARTIST — NOT JUST THE ALGORITHM.
+    </p>
+    <div class="hero-actions">
+      <a href="#artists" class="btn-primary">EXPLORE ARTISTS</a>
+      <a href="#gigs" class="btn-red">VIEW GIGS</a>
+    </div>
+  </div>
+
+  <div class="hero-scroll">SCROLL</div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-track">
+    <span class="ticker-item"><span>●</span> VISUAL ARTISTS</span>
+    <span class="ticker-item"><span>●</span> MURALISTS</span>
+    <span class="ticker-item"><span>●</span> ANIMATORS</span>
+    <span class="ticker-item"><span>●</span> PHOTOGRAPHERS</span>
+    <span class="ticker-item"><span>●</span> MUSICIANS</span>
+    <span class="ticker-item"><span>●</span> ILLUSTRATORS</span>
+    <span class="ticker-item"><span>●</span> TEXTILE ARTISTS</span>
+    <span class="ticker-item"><span>●</span> CERAMICISTS</span>
+    <span class="ticker-item"><span>●</span> TATTOO ARTISTS</span>
+    <span class="ticker-item"><span>●</span> DANCERS</span>
+    <span class="ticker-item"><span>●</span> SCULPTORS</span>
+    <span class="ticker-item"><span>●</span> WRITERS</span>
+    <span class="ticker-item"><span>●</span> VISUAL ARTISTS</span>
+    <span class="ticker-item"><span>●</span> MURALISTS</span>
+    <span class="ticker-item"><span>●</span> ANIMATORS</span>
+    <span class="ticker-item"><span>●</span> PHOTOGRAPHERS</span>
+    <span class="ticker-item"><span>●</span> MUSICIANS</span>
+    <span class="ticker-item"><span>●</span> ILLUSTRATORS</span>
+    <span class="ticker-item"><span>●</span> TEXTILE ARTISTS</span>
+    <span class="ticker-item"><span>●</span> CERAMICISTS</span>
+    <span class="ticker-item"><span>●</span> TATTOO ARTISTS</span>
+    <span class="ticker-item"><span>●</span> DANCERS</span>
+    <span class="ticker-item"><span>●</span> SCULPTORS</span>
+    <span class="ticker-item"><span>●</span> WRITERS</span>
+  </div>
+</div>
+
+<!-- ARTIST DIRECTORY -->
+<section id="artists">
+  <div class="section-label reveal">ARTIST DIRECTORY</div>
+  <div class="directory-header reveal">
+    <h2 class="directory-title">FIND AN ARTIST.</h2>
+    <a href="#download" class="btn-red" style="font-size:11px; padding: 10px 20px;">BROWSE ALL ↗</a>
+  </div>
+
+  <div class="filter-bar reveal">
+    <select class="filter-select" id="filter-type" onchange="filterArtists()">
+      <option value="">ALL TYPES</option>
+      <option value="visual">VISUAL ARTIST</option>
+      <option value="mural">MURALIST</option>
+      <option value="music">MUSICIAN</option>
+      <option value="photo">PHOTOGRAPHER</option>
+      <option value="design">ANIMATOR</option>
+      <option value="textile">TEXTILE ARTIST</option>
+      <option value="illustrator">ILLUSTRATOR</option>
+      <option value="tattoo">TATTOO ARTIST</option>
+      <option value="sculptor">SCULPTOR</option>
+      <option value="dancer">DANCER</option>
+    </select>
+    <select class="filter-select" id="filter-country" onchange="filterArtists()">
+      <option value="">ALL COUNTRIES</option>
+      <option value="canada">CANADA</option>
+      <option value="australia">AUSTRALIA</option>
+      <option value="belgium">BELGIUM</option>
+      <option value="italy">ITALY</option>
+      <option value="austria">AUSTRIA</option>
+    </select>
+    <select class="filter-select" id="filter-city" onchange="filterArtists()">
+      <option value="">ALL CITIES</option>
+      <option value="calgary">CALGARY</option>
+      <option value="victoria">VICTORIA</option>
+      <option value="toronto">TORONTO</option>
+      <option value="vancouver">VANCOUVER</option>
+      <option value="banff">BANFF</option>
+      <option value="gold coast">GOLD COAST</option>
+    </select>
+  </div>
+
+  <p class="artist-count reveal" id="artist-count">9 ARTISTS FOUND</p>
+
+  <div class="artist-grid" id="artist-grid">
+    <div class="artist-card reveal" data-type="visual" data-country="canada" data-city="victoria">
+      <img src="artist2.jpg" alt="Artist">
+      <div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1a0e,#2a200a);display:flex;align-items:center;justify-content:center;"><span style="font-size:48px;opacity:0.15;">◈</span></div>
+      <span class="artist-posts">3 POSTS</span>
+      <div class="artist-info"><span class="artist-name">TESSA LEE</span><span class="artist-type">MUSICIAN</span></div>
+      <span class="artist-city">VICTORIA</span>
+    </div>
+    <div class="artist-card reveal" data-type="mural" data-country="canada" data-city="calgary" style="animation-delay:0.1s">
+      <img src="artist4.jpg" alt="Artist">
+      <div style="width:100%;height:100%;background:linear-gradient(135deg,#0e1a1a,#0a2020);display:flex;align-items:center;justify-content:center;"><span style="font-size:48px;opacity:0.15;">◈</span></div>
+      <span class="artist-posts">0 POSTS</span>
+      <div class="artist-info"><span class="artist-name">HIROKI KAMAKURA</span><span class="artist-type">GUITARIST</span></div>
+      <span class="artist-city">TOKYO</span>
+    </div>
+    <div class="artist-card reveal" data-type="mural" data-country="canada" data-city="calgary" style="animation-delay:0.2s">
+      <img src="artist3.jpg" alt="Artist">
+      <div style="width:100%;height:100%;background:linear-gradient(135deg,#1a0e0e,#200a0a);display:flex;align-items:center;justify-content:center;"><span style="font-size:48px;opacity:0.15;">◈</span></div>
+      <span class="artist-posts">2 POSTS</span>
+      <div class="artist-info"><span class="artist-name">SOPHIE BRWON</span><span class="artist-type">MODEL</span></div>
+      <span class="artist-city">CALGARY</span>
+    </div>
+    <div class="artist-card reveal" data-type="design" data-country="italy" data-city="salza" style="animation-delay:0.1s">
+      <img src="artist5.jpg" alt="Artist">
+      <div style="width:100%;height:100%;background:linear-gradient(135deg,#0e0e1a,#0a0a2a);display:flex;align-items:center;justify-content:center;"><span style="font-size:48px;opacity:0.15;">◈</span></div>
+      <span class="artist-posts">0 POSTS</span>
+      <div class="artist-info"><span class="artist-name">MUNA AKKAB</span><span class="artist-type">ANIMATOR</span></div>
+      <span class="artist-city">SALZA</span>
+    </div>
+    <div class="artist-card reveal" data-type="textile" data-country="australia" data-city="gold coast" style="animation-delay:0.2s">
+      <img src="artist1.jpg" alt="Artist">
+      <div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1a0e,#181800);display:flex;align-items:center;justify-content:center;"><span style="font-size:48px;opacity:0.15;">◈</span></div>
+      <span class="artist-posts">0 POSTS</span>
+      <div class="artist-info"><span class="artist-name">LUCAS PRICHARD</span><span class="artist-type">WRITER</span></div>
+      <span class="artist-city">GOLD COAST</span>
+    </div>
+    <div class="artist-card reveal" data-type="design" data-country="canada" data-city="calgary" style="animation-delay:0.3s">
+      <img src="artist6.jpg" alt="Artist">
+      <div style="width:100%;height:100%;background:linear-gradient(135deg,#0a1a10,#0a2015);display:flex;align-items:center;justify-content:center;"><span style="font-size:48px;opacity:0.15;">◈</span></div>
+      <span class="artist-posts">3 POSTS</span>
+      <div class="artist-info"><span class="artist-name">Sara Kenn</span><span class="artist-type">DANCER</span></div>
+      <span class="artist-city">NEW YORK</span>
+    </div>
+  </div>
+
+  <div class="see-all-row reveal">
+    <a href="#download" class="btn-primary">VIEW ALL ARTISTS IN THE APP</a>
+  </div>
+</section>
+
+<!-- PLATFORM FEATURES -->
+<section id="platform">
+  <div class="section-label reveal">THE PLATFORM</div>
+  <h2 class="reveal" style="font-size:clamp(28px,4vw,52px);font-weight:700;letter-spacing:-0.01em;margin-bottom:60px;">BUILT FOR ARTISTS.<br><em style="color:var(--dim);font-weight:400">NOT THE ALGORITHM.</em></h2>
+
+  <div class="features-grid">
+    <div class="feature-item reveal">
+      <span class="feature-num">01</span>
+      <p class="feature-name">THE FEED</p>
+      <p class="feature-desc">POST YOUR WORK. BUILD YOUR PRESENCE. YOUR FEED IS YOUR PORTFOLIO IN MOTION — EVERY POST LIVES ON YOUR PROFILE AND IN THE COMMUNITY FEED.</p>
+    </div>
+    <div class="feature-item reveal">
+      <span class="feature-num">02</span>
+      <p class="feature-name">ARTIST DIRECTORY</p>
+      <p class="feature-desc">SEARCHABLE BY ART TYPE, CITY, AND DISCIPLINE. GIG POSTERS FIND YOU. COLLECTORS DISCOVER YOU. YOUR PROFILE WORKS EVEN WHILE YOU SLEEP.</p>
+    </div>
+    <div class="feature-item reveal">
+      <span class="feature-num">03</span>
+      <p class="feature-name">GIG BOARD</p>
+      <p class="feature-desc">BRANDS, VENUES, AND INDIVIDUALS POST GIGS WITH BUDGETS AND DEADLINES. ARTISTS BROWSE, FILTER, AND EXPRESS INTEREST. SIMPLE AS THAT.</p>
+    </div>
+    <div class="feature-item reveal">
+      <span class="feature-num">04</span>
+      <p class="feature-name">FEATURES</p>
+      <p class="feature-desc">ARTISTS ARE SCOUTED FROM ACROSS THE COUNTRY AND FEATURED IN EDITORIAL SPOTLIGHTS. YOUR WORK DESERVES MORE THAN AN ALGORITHM DECIDING ITS FATE.</p>
+    </div>
+  </div>
+</section>
+
+<!-- GIGS -->
+<section id="gigs">
+  <div class="section-label reveal">GIG BOARD</div>
+  <div class="directory-header reveal">
+    <h2 class="directory-title">OPEN GIGS.</h2>
+    <a href="#download" class="btn-red" style="font-size:11px; padding: 10px 20px;">POST A GIG ↗</a>
+  </div>
+
+  <div class="gig-row reveal">
+  <div class="gig-left">
+    <span class="gig-title">LOOKING FOR A CERAMIC ARTIST FOR HOTEL LOBBY INSTALLATION</span>
+    <span class="gig-meta">SUNNYSIDE CAFE · CERAMIC ARTIST · TORONTO, ON · JULY 12</span>
+  </div>
+  <div class="gig-right">
+    <span class="gig-budget">$1,500 — $3,000</span>
+    <span class="gig-interested">6 INTERESTED</span>
+  </div>
+</div>
+
+<div class="gig-row reveal">
+  <div class="gig-left">
+    <span class="gig-title">LIVE JAZZ TRIO NEEDED FOR RESTAURANT OPENING NIGHT</span>
+    <span class="gig-meta">THE MAPLE ROOM · MUSICIAN · CALGARY, AB · JUNE 28</span>
+  </div>
+  <div class="gig-right">
+    <span class="gig-budget">$400 — $900</span>
+    <span class="gig-interested">4 INTERESTED</span>
+  </div>
+</div>
+
+<div class="gig-row reveal">
+  <div class="gig-left">
+    <span class="gig-title">MURALIST WANTED FOR OUTDOOR COMMUNITY WALL</span>
+    <span class="gig-meta">CITY OF EDMONTON · MURALIST · EDMONTON, AB · AUGUST</span>
+  </div>
+  <div class="gig-right">
+    <span class="gig-budget">$2,000 — $5,000</span>
+    <span class="gig-interested">11 INTERESTED</span>
+  </div>
+</div>
+
+<div class="gig-row reveal">
+  <div class="gig-left">
+    <span class="gig-title">FOOD PHOTOGRAPHER FOR NEW CAFÉ MENU SHOOT</span>
+    <span class="gig-meta">LITTLE NORTH CAFÉ · PHOTOGRAPHER · VANCOUVER, BC · ONGOING</span>
+  </div>
+  <div class="gig-right">
+    <span class="gig-budget">$350 — $700</span>
+    <span class="gig-interested">8 INTERESTED</span>
+  </div>
+</div>
+
+<div class="gig-row reveal">
+  <div class="gig-left">
+    <span class="gig-title">ILLUSTRATOR NEEDED FOR CHILDREN'S BOOK SERIES</span>
+    <span class="gig-meta">PRIVATE CLIENT · ILLUSTRATOR · REMOTE · SEPTEMBER</span>
+  </div>
+  <div class="gig-right">
+    <span class="gig-budget">$2,000 — $6,000</span>
+    <span class="gig-interested">14 INTERESTED</span>
+  </div>
+</div>
+
+  <div class="see-all-row reveal" style="padding-top:32px;">
+    <a href="#download" class="btn-primary">SEE ALL GIGS IN THE APP</a>
+  </div>
+</section>
+
+<!-- FEATURES / EDITORIAL -->
+<section id="features" style="padding-left:0;padding-right:0;">
+  <div style="padding: 0 40px 40px;" class="reveal">
+    <div class="section-label">FEATURED ARTISTS</div>
+    <h2 style="font-size:clamp(28px,4vw,52px);font-weight:700;letter-spacing:-0.01em;">SCOUTED.<br><em style="color:var(--dim);font-weight:400">FROM ACROSS THE NATION.</em></h2>
+  </div>
+
+  <div class="editorial-hero reveal">
+    <img src="thumbnail1.jpg" alt="Featured Artist Video">
+
+    <div class="play-btn">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M4 2L14 8L4 14V2Z" fill="#c0392b"/>
+      </svg>
+    </div>
+
+    <div class="editorial-hero-info">
+      <p class="ep-label">EP. 2 · FEATURED</p>
+      <h3 class="ep-title">EP 2: Gabbie Cournoyer</h3>
+      <p class="ep-location">REVELSTOKE, BC</p>
+    </div>
+  </div>
+
+  <div class="ep-list">
+    <div class="ep-item reveal">
+      <img src="tessa.jpg" alt="Tessa Mok" class="ep-thumb">
+      <div class="ep-item-info">
+        <span class="ep-item-num">EP. 1</span>
+        <span class="ep-item-title">EP 1: TESSA MOK & THE SOUTH</span>
+        <span class="ep-item-loc">NEW ORLEANS, LA</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-label reveal">HOW IT WORKS</div>
+  <h2 class="reveal" style="font-size:clamp(28px,4vw,52px);font-weight:700;letter-spacing:-0.01em;">GET STARTED<br><em style="color:var(--dim);font-weight:400">IN MINUTES.</em></h2>
+
+  <div class="how-grid">
+    <div class="how-item reveal">
+      <span class="how-num">01</span>
+      <span class="how-title">CREATE YOUR PROFILE</span>
+      <p class="how-desc">CHOOSE YOUR ROLE — ARTIST OR GIG POSTER. SET YOUR ART TYPE, LOCATION, AND TAGS. LAUNCH YOUR PROFILE IN UNDER 5 MINUTES.</p>
+    </div>
+    <div class="how-item reveal">
+      <span class="how-num">02</span>
+      <span class="how-title">POST YOUR WORK</span>
+      <p class="how-desc">SHARE IMAGES, VIDEOS, AND AUDIO TO YOUR FEED. EVERY POST APPEARS ON YOUR PROFILE AND IN THE COMMUNITY FEED.</p>
+    </div>
+    <div class="how-item reveal">
+      <span class="how-num">03</span>
+      <span class="how-title">FIND GIGS</span>
+      <p class="how-desc">BROWSE OPEN GIGS FILTERED BY ART TYPE AND LOCATION. EXPRESS INTEREST AND GET DISCOVERED BY THE PEOPLE WHO NEED YOU.</p>
+    </div>
+    <div class="how-item reveal">
+      <span class="how-num">04</span>
+      <span class="how-title">GET FEATURED</span>
+      <p class="how-desc">OUR TEAM SCOUTS ARTISTS FROM ACROSS THE PLATFORM. THE BEST WORK GETS FEATURED — NO PAY-TO-PLAY, NO POLITICS.</p>
+    </div>
+  </div>
+</section>
+
+<!-- DOWNLOAD CTA -->
+<section class="cta-section" id="download">
+  <p style="font-size:11px;color:var(--red);letter-spacing:0.2em;margin-bottom:20px;" class="reveal">● NOW AVAILABLE</p>
+  <h2 class="cta-title reveal">
+    YOUR WORK<br><em>DESERVES</em><br>AN AUDIENCE.
+  </h2>
+  <p class="cta-sub reveal">JOIN ARTISTS ACROSS THE COUNTRY ALREADY ON WORK(ER) OF ART.</p>
+  <div class="store-badges reveal">
+    <a href="#" class="store-badge">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      APP STORE
+    </a>
+    <a href="#" class="store-badge">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-1.847a1 1 0 010 1.28L15.698 14l-2.302-2.302 2.302-2.303zM5.864 3.658L16.8 9.99l-2.302 2.302-8.635-8.634z"/></svg>
+      GOOGLE PLAY
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="logo-box">WORK(ER)<br><span style="display:inline-flex;align-items:center;gap:3px;">OF ART <span class="logo-dot"></span></span></div>
+  <p class="footer-copy">© 2025 WORK(ER) OF ART. ALL RIGHTS RESERVED.</p>
+  <ul class="footer-links">
+    <li><a href="#">TERMS</a></li>
+    <li><a href="#">PRIVACY</a></li>
+    <li><a href="#">CONTACT</a></li>
+    <li><a href="#">INSTAGRAM</a></li>
+  </ul>
+</footer>
+
+<script>
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
     });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  reveals.forEach(el => observer.observe(el));
+
+  // Artist filter — type + country + city
+  function filterArtists() {
+    const type = document.getElementById('filter-type').value;
+    const country = document.getElementById('filter-country').value;
+    const city = document.getElementById('filter-city').value;
+    const cards = document.querySelectorAll('.artist-card');
+    let count = 0;
+    cards.forEach(card => {
+      const matchType = !type || card.dataset.type === type;
+      const matchCountry = !country || card.dataset.country === country;
+      const matchCity = !city || card.dataset.city === city;
+      const show = matchType && matchCountry && matchCity;
+      card.style.display = show ? 'block' : 'none';
+      if (show) count++;
+    });
+    document.getElementById('artist-count').textContent = count + ' ARTIST' + (count !== 1 ? 'S' : '') + ' FOUND';
   }
+</script>
 
-  const event = JSON.parse(body);
-
-  if (event.type === 'payment_intent.succeeded') {
-    const intent = event.data.object;
-    const { type, user_id, is_featured } = intent.metadata;
-
-    console.log('Payment succeeded:', type, user_id);
-
-    if (type === 'verified_artist' && user_id) {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          is_verified: true,
-          verified_since: new Date().toISOString(),
-          stripe_subscription_id: intent.id,
-        })
-        .eq('id', user_id);
-
-      if (error) {
-        console.error('Failed to verify artist:', error);
-        return new Response(JSON.stringify({ error: error.message }), {
-          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      console.log('Artist verified:', user_id);
-    }
-
-    if (type === 'gig_post') {
-      const updates: Record<string, unknown> = {};
-      if (is_featured === 'true') {
-        updates.is_featured = true;
-        updates.featured_until = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-      }
-
-      if (Object.keys(updates).length > 0 && user_id) {
-        // Update the most recent unpaid gig by this user
-        const { data: gigs } = await supabase
-          .from('gigs')
-          .select('id')
-          .eq('poster_id', user_id)
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (gigs && gigs.length > 0) {
-          await supabase.from('gigs').update(updates).eq('id', gigs[0].id);
-          console.log('Gig updated:', gigs[0].id);
-        }
-      }
-    }
-  }
-
-  return new Response(JSON.stringify({ received: true }), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
-});
+</body>
+</html>
