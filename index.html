@@ -54,8 +54,8 @@
 
   .logo-box {
     border: 1px solid var(--white);
-    width: 60px;
-    height: 60px;
+    width: 52px;
+    height: 52px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -142,38 +142,37 @@
     overflow: hidden;
   }
 
-  .hero-video {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: translate(-50%, -50%);
-  opacity: 0.75;
-  filter: brightness(0.55);
-}
-
-  .hero-bg-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    filter: grayscale(30%);
-  }
-
-  .hero-bg::after {
+  .hero::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.85) 70%, #000 100%);
+    background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.75) 60%, #000 100%);
+    z-index: 1;
   }
 
   .hero-content {
-  position: relative;
-  z-index: 2;
-  max-width: 900px;
-  padding-top: 120px;
-}
+    position: relative;
+    z-index: 2;
+    max-width: 900px;
+    padding-top: 120px;
+  }
+
+  .hero-scroll {
+    position: absolute;
+    bottom: 32px;
+    right: 40px;
+    z-index: 2;
+  }
+
+  .hero-video {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transform: translate(-50%, -50%);
+    opacity: 0.6;
+    z-index: 0;
+  }
 
   .hero-eyebrow {
     font-size: 11px;
@@ -833,25 +832,22 @@
 </nav>
 
 <!-- HERO -->
-<div class="hero-bg">
+<section class="hero" id="home">
   <video autoplay muted loop playsinline class="hero-video">
     <source src="header-video.mp4" type="video/mp4">
   </video>
-  
-</div>
-
 
   <div class="hero-content">
     <p class="hero-eyebrow">● THE ULTIMATE ART PLATFORM</p>
     <div style="display:flex;align-items:flex-start;gap:clamp(20px,3vw,48px);margin-bottom:36px;">
       <div class="logo-box-lg">WORK(ER)<br><span style="display:inline-flex;align-items:center;gap:4px;">OF ART <span class="logo-dot" style="width:clamp(8px,1vw,13px);height:clamp(8px,1vw,13px);flex-shrink:0;"></span></span></div>
       <h1 class="hero-title" style="margin-bottom:0;text-align:left;">
-        WHERE ART<br><em>TESSA</em> ITS<br>WORK.
+        WHERE ART<br><em>FINDS</em> ITS<br>WORK.
       </h1>
     </div>
     <p class="hero-sub">
       DISCOVER ARTISTS. POST GIGS. BUILD YOUR PORTFOLIO.<br>
-      A PLATFORM BUIT FOR ARTISTS BY ARTISTS.
+      THE PLATFORM BUILT FOR EVERY ARTIST — NOT JUST THE ALGORITHM.
     </p>
     <div class="hero-actions">
       <a href="#artists" class="btn-primary">EXPLORE ARTISTS</a>
@@ -988,7 +984,7 @@
 <!-- PLATFORM FEATURES -->
 <section id="platform">
   <div class="section-label reveal">THE PLATFORM</div>
-  <h2 class="reveal" style="font-size:clamp(28px,4vw,52px);font-weight:700;letter-spacing:-0.01em;margin-bottom:60px;">BUILT FOR ARTISTS.<br><em style="color:var(--dim);font-weight:400">BY ARTISTS.</em></h2>
+  <h2 class="reveal" style="font-size:clamp(28px,4vw,52px);font-weight:700;letter-spacing:-0.01em;margin-bottom:60px;">BUILT FOR ARTISTS.<br><em style="color:var(--dim);font-weight:400">NOT THE ALGORITHM.</em></h2>
 
   <div class="features-grid">
     <div class="feature-item reveal">
@@ -1089,36 +1085,33 @@
     <h2 style="font-size:clamp(28px,4vw,52px);font-weight:700;letter-spacing:-0.01em;">SCOUTED.<br><em style="color:var(--dim);font-weight:400">FROM ACROSS THE NATION.</em></h2>
   </div>
 
- 
   <div class="editorial-hero reveal">
-    <img src="thumbnail1.jpg" alt="Featured Artist Video">
-
+    <div style="width:100%;height:100%;background:linear-gradient(135deg,#1a0800,#2a1500,#0d0500);display:flex;align-items:center;justify-content:center;">
+      <span style="font-size:120px;opacity:0.06;">♫</span>
+    </div>
     <div class="play-btn">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
         <path d="M4 2L14 8L4 14V2Z" fill="#c0392b"/>
       </svg>
     </div>
-
     <div class="editorial-hero-info">
       <p class="ep-label">EP. 2 · FEATURED</p>
-      <h3 class="ep-title">EP 2: Gabbie Cournoyer</h3>
-      <p class="ep-location">REVELSTOKE, BC</p>
+      <h3 class="ep-title">EP 2: KAKA KEKE</h3>
+      <p class="ep-location">CALGARY, AB</p>
     </div>
   </div>
-</a>
 
-<div class="ep-list">
+  <div class="ep-list">
     <div class="ep-item reveal">
-      <img src="tessa.jpg" alt="Sofia Hermann" class="ep-thumb">
-
+      <div style="width:80px;height:80px;background:linear-gradient(135deg,#0d1a0d,#0a1510);flex-shrink:0;"></div>
       <div class="ep-item-info">
         <span class="ep-item-num">EP. 1</span>
-        <span class="ep-item-title">EP 1: TESSA MOK & THE SOUTH</span>
-        <span class="ep-item-loc">NEW ORLEANS, LA</span>
+        <span class="ep-item-title">EP 1: SOFIA IN BANFF</span>
+        <span class="ep-item-loc">BANFF, AB</span>
       </div>
     </div>
-  </a>
-</div>
+  </div>
+</section>
 
 <!-- HOW IT WORKS -->
 <section id="how">
