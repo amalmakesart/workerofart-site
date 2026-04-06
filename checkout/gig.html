@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POST A GIG — WORK(ER) OF ART</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --black: #000000; --white: #ffffff;
+    --red: #c0392b; --gold: #f6c55a;
+    --dim: #888880; --border: rgba(255,255,255,0.12);
+    --font: 'Space Mono', monospace;
+  }
+  body {
+    background: var(--black); color: var(--white);
+    font-family: var(--font); min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 40px 20px;
+  }
+  .logo {
+    border: 1px solid var(--white); width: 64px; height: 64px;
+    display: flex; flex-direction: column;
+    align-items: flex-start; justify-content: center;
+    padding: 0 8px; font-size: 8px;
+    letter-spacing: 0.08em; line-height: 1.7; margin-bottom: 40px;
+  }
+  .logo-dot {
+    display: inline-block; width: 6px; height: 6px;
+    border-radius: 50%; background: var(--red);
+    margin-left: 3px; vertical-align: middle;
+  }
+  .card {
+    width: 100%; max-width: 480px;
+    border: 1px solid var(--border);
+    padding: 40px; background: #050505;
+  }
+  h1 { font-size: 24px; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 24px; }
+
+  /* Tier selector */
+  .tier-row { display: flex; gap: 12px; margin-bottom: 32px; }
+  .tier-btn {
+    flex: 1; border: 1px solid var(--border);
+    background: transparent; color: var(--dim);
+    font-family: var(--font); padding: 16px 12px;
+    cursor: pointer; transition: all 0.2s; text-align: center;
+  }
+  .tier-btn.active { border-color: var(--red); background: #0a0000; color: var(--white); }
+  .tier-btn.featured.active { border-color: var(--gold); background: #0a0800; }
+  .tier-name { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; display: block; margin-bottom: 6px; }
+  .tier-price { font-size: 22px; font-weight: 700; display: block; margin-bottom: 4px; }
+  .tier-btn.active .tier-price { color: var(--red); }
+  .tier-btn.featured.active .tier-price { color: var(--gold); }
+  .tier-desc { font-size: 9px; letter-spacing: 0.06em; line-height: 1.5; }
+
+  .feature-list { list-style: none; margin-bottom: 28px; display: flex; flex-direction: column; gap: 8px; }
+  .feature-list li { font-size: 11px; color: var(--dim); letter-spacing: 0.06em; display: flex; gap: 8px; }
+  .feature-list li::before { content: '·'; color: var(--red); flex-shrink: 0; }
+  #featured-extras { display: none; }
+  #featured-extras li::before { content: '★'; color: var(--gold); flex-shrink: 0; }
+
+  .divider { height: 1px; background: var(--border); margin-bottom: 28px; }
+  .field-label { font-size: 9px; color: var(--dim); letter-spacing: 0.15em; margin-bottom: 6px; }
+  #card-element {
+    border: 1px solid var(--border); padding: 14px 16px;
+    background: #0a0a0a; transition: border-color 0.2s;
+  }
+  #card-element.focused { border-color: var(--red); }
+  #card-errors { color: var(--red); font-size: 10px; letter-spacing: 0.08em; min-height: 16px; }
+
+  #submit-btn {
+    background: var(--red); color: var(--white);
+    border: none; padding: 16px; width: 100%;
+    font-family: var(--font); font-size: 12px;
+    font-weight: 700; letter-spacing: 0.15em;
+    cursor: pointer; transition: opacity 0.2s; margin-top: 16px;
+  }
+  #submit-btn.featured-active { background: var(--gold); color: var(--black); }
+  #submit-btn:hover { opacity: 0.85; }
+  #submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .secure-note { text-align: center; font-size: 9px; color: #333; letter-spacing: 0.08em; margin-top: 8px; }
+
+  .success-screen { display: none; text-align: center; padding: 20px 0; }
+  .success-icon { font-size: 48px; margin-bottom: 20px; }
+  .success-title { font-size: 18px; font-weight: 700; letter-spacing: 0.06em; margin-bottom: 8px; color: var(--red); }
+  .success-sub { font-size: 11px; color: var(--dim); letter-spacing: 0.08em; line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<div class="logo">
+  WORK(ER)<br>
+  <span style="display:inline-flex;align-items:center;gap:3px;">
+    OF ART <span class="logo-dot"></span>
+  </span>
+</div>
+
+<div class="card">
+
+  <div class="success-screen" id="success-screen">
+    <div class="success-icon">✓</div>
+    <p class="success-title">GIG POSTED</p>
+    <p class="success-sub">
+      YOUR GIG IS NOW LIVE ON WORK(ER) OF ART.<br>
+      RETURN TO THE APP TO SEE IT.
+    </p>
+  </div>
+
+  <div id="payment-section">
+    <h1>POST A GIG</h1>
+
+    <!-- Tier selector -->
+    <div class="tier-row">
+      <button class="tier-btn active" id="btn-standard" onclick="selectTier('standard')">
+        <span class="tier-name">STANDARD</span>
+        <span class="tier-price">$6</span>
+        <span class="tier-desc">LISTED ON THE GIG BOARD</span>
+      </button>
+      <button class="tier-btn featured" id="btn-featured" onclick="selectTier('featured')">
+        <span class="tier-name">FEATURED ★</span>
+        <span class="tier-price">$14</span>
+        <span class="tier-desc">PINNED TO TOP OF GIG BOARD</span>
+      </button>
+    </div>
+
+    <ul class="feature-list">
+      <li>VISIBLE TO ALL ARTISTS ON THE PLATFORM</li>
+      <li>ARTISTS CAN EXPRESS INTEREST DIRECTLY</li>
+      <li>STAYS LIVE UNTIL YOU CLOSE IT</li>
+      <li id="featured-extras" style="display:none;">PINNED TO TOP OF GIG BOARD FOR 7 DAYS</li>
+      <li id="featured-extras-2" style="display:none;">HIGHLIGHTED WITH FEATURED BADGE</li>
+    </ul>
+
+    <div class="divider"></div>
+
+    <form id="payment-form">
+      <div>
+        <p class="field-label">CARD DETAILS</p>
+        <div id="card-element"></div>
+        <div id="card-errors"></div>
+      </div>
+      <button id="submit-btn" type="submit">PAY $6 — POST GIG</button>
+      <p class="secure-note">SECURED BY STRIPE · ONE-TIME PAYMENT</p>
+    </form>
+  </div>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const userId = params.get('user_id');
+  const gigId = params.get('gig_id'); // passed from app after gig draft is saved
+
+  let currentTier = 'standard';
+  const PRICES = {
+    standard: { id: 'price_1TJ8RV2XCT18tsxgO0hqT1Tu', amount: '$6' },
+    featured:  { id: 'price_1TJ8TE2XCT18tsxg1vBmxhKw', amount: '$14' },
+  };
+
+  function selectTier(tier) {
+    currentTier = tier;
+    document.getElementById('btn-standard').classList.toggle('active', tier === 'standard');
+    document.getElementById('btn-featured').classList.toggle('active', tier === 'featured');
+    document.getElementById('btn-featured').classList.toggle('featured', true);
+
+    const featuredExtras = document.querySelectorAll('[id^="featured-extras"]');
+    featuredExtras.forEach(el => el.style.display = tier === 'featured' ? 'flex' : 'none');
+
+    const btn = document.getElementById('submit-btn');
+    btn.textContent = `PAY ${PRICES[tier].amount} — POST GIG`;
+    btn.classList.toggle('featured-active', tier === 'featured');
+
+    // Update card focus color
+    document.getElementById('card-element').style.setProperty(
+      '--focus-color', tier === 'featured' ? '#f6c55a' : '#c0392b'
+    );
+  }
+
+  const stripe = Stripe('pk_live_51TJ88a2XCT18tsxg4slQKwc4GGJsNxNuKNbo20WeqRr3Igpfn2SxnangOVzR75sNPdMM8oK1306qfCkwnsoKIPJx00EnnHTpJP');
+  const elements = stripe.elements();
+  const cardElement = elements.create('card', {
+    style: {
+      base: {
+        color: '#ffffff', fontFamily: "'Space Mono', monospace",
+        fontSize: '14px', letterSpacing: '0.04em',
+        '::placeholder': { color: '#444444' },
+      },
+      invalid: { color: '#c0392b' },
+    }
+  });
+  cardElement.mount('#card-element');
+  cardElement.on('focus', () => document.getElementById('card-element').classList.add('focused'));
+  cardElement.on('blur', () => document.getElementById('card-element').classList.remove('focused'));
+  cardElement.on('change', (e) => {
+    document.getElementById('card-errors').textContent = e.error ? e.error.message : '';
+  });
+
+  document.getElementById('payment-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'PROCESSING...';
+
+    try {
+      const res = await fetch('https://tehkoxslqtgofivlcdyk.supabase.co/functions/v1/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'gig',
+          user_id: userId,
+          gig_id: gigId,
+          price_id: PRICES[currentTier].id,
+          is_featured: currentTier === 'featured',
+        }),
+      });
+
+      const { clientSecret, error } = await res.json();
+      if (error) throw new Error(error);
+
+      const result = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: { card: cardElement },
+      });
+
+      if (result.error) {
+        document.getElementById('card-errors').textContent = result.error.message;
+        btn.disabled = false;
+        btn.textContent = `PAY ${PRICES[currentTier].amount} — POST GIG`;
+      } else {
+        document.getElementById('payment-section').style.display = 'none';
+        document.getElementById('success-screen').style.display = 'block';
+        if (window.ReactNativeWebView) {
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'gig_payment_success',
+            user_id: userId,
+            gig_id: gigId,
+            is_featured: currentTier === 'featured',
+          }));
+        }
+      }
+    } catch (err) {
+      document.getElementById('card-errors').textContent = 'SOMETHING WENT WRONG. PLEASE TRY AGAIN.';
+      btn.disabled = false;
+      btn.textContent = `PAY ${PRICES[currentTier].amount} — POST GIG`;
+    }
+  });
+</script>
+</body>
+</html>
