@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WORK(ER) OF ART</title>
+<link rel="icon" type="image/png" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
@@ -54,8 +55,8 @@
 
   .logo-box {
     border: 1px solid var(--white);
-    width: 52px;
-    height: 52px;
+    width: 60px;
+    height: 60px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -82,11 +83,11 @@
   align-items: flex-start;
   justify-content: center;
   padding: 0 clamp(16px, 2vw, 28px);
-  font-size: clamp(16px, 1.7vw, 24px);
+  font-size: clamp(22px, 2.4vw, 34px);
   letter-spacing: 0.08em;
   font-weight: 400;
   color: var(--white);
-  line-height: 1.4;
+  line-height: 1.2;
   text-align: left;
   flex-shrink: 0;
   white-space: nowrap;
@@ -799,6 +800,47 @@
 
   /* ── MOBILE ── */
   @media (max-width: 768px) {
+    .hero-content > div {
+  flex-direction: column;
+  align-items: flex-start !important;
+  gap: 24px !important;
+}
+
+.logo-box-lg {
+  width: 140px;
+  height: 140px;
+  font-size: 14px;
+  padding: 0 14px;
+}
+
+.hero-title {
+  font-size: clamp(48px, 14vw, 72px);
+  line-height: 0.9;
+  word-break: break-word;
+}
+
+.hero-sub {
+  max-width: 100%;
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+.hero-actions {
+  flex-direction: column;
+  width: 100%;
+  align-items: stretch;
+}
+
+.btn-primary,
+.btn-red {
+  width: 100%;
+  text-align: center;
+}
+
+.hero {
+  padding-top: 120px;
+  overflow: hidden;
+}
     nav { padding: 16px 20px; }
     .nav-links { display: none; }
     section { padding: 70px 20px; }
@@ -813,10 +855,18 @@
     .cta-section { padding: 80px 20px; }
     .filter-bar { gap: 8px; }
   }
+  .hero-top-row {
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(20px, 3vw, 48px);
+  margin-bottom: 36px;
+}
 </style>
 </head>
 <body>
 
+
+  
 <!-- NAV -->
 <nav>
   <a href="#" class="nav-logo">
@@ -839,7 +889,7 @@
 
   <div class="hero-content">
     <p class="hero-eyebrow">● THE ULTIMATE ART PLATFORM</p>
-    <div style="display:flex;align-items:flex-start;gap:clamp(20px,3vw,48px);margin-bottom:36px;">
+    <div class="hero-top-row">
       <div class="logo-box-lg">WORK(ER)<br><span style="display:inline-flex;align-items:center;gap:4px;">OF ART <span class="logo-dot" style="width:clamp(8px,1vw,13px);height:clamp(8px,1vw,13px);flex-shrink:0;"></span></span></div>
       <h1 class="hero-title" style="margin-bottom:0;text-align:left;">
         WHERE ART<br><em>FINDS</em> ITS<br>WORK.
@@ -847,7 +897,7 @@
     </div>
     <p class="hero-sub">
       DISCOVER ARTISTS. POST GIGS. BUILD YOUR PORTFOLIO.<br>
-      THE PLATFORM BUILT FOR EVERY ARTIST — NOT JUST THE ALGORITHM.
+      A PLATFORM BUILT FOR ARTISTS BY ARTISTS.
     </p>
     <div class="hero-actions">
       <a href="#artists" class="btn-primary">EXPLORE ARTISTS</a>

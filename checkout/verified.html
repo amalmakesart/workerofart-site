@@ -172,6 +172,8 @@
   // Get user_id from URL params (passed from the app)
   const params = new URLSearchParams(window.location.search);
   const userId = params.get('user_id');
+  const SUPABASE_FUNCTIONS_URL = 'https://tehkoxslqtgofivlcdyk.supabase.co/functions/v1/create-checkout';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_lwgQsrT4prd3upPoGGu7QA_csHmVUnt';
 
   const stripe = Stripe('pk_live_51TJ88a2XCT18tsxg4slQKwc4GGJsNxNuKNbo20WeqRr3Igpfn2SxnangOVzR75sNPdMM8oK1306qfCkwnsoKIPJx00EnnHTpJP');
   const elements = stripe.elements();
@@ -205,9 +207,9 @@
 
     try {
       // Create subscription via Supabase Edge Function
-      const res = await fetch('https://tehkoxslqtgofivlcdyk.supabase.co/functions/v1/create-checkout', {
+      const res = await fetch(SUPABASE_FUNCTIONS_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlaGtveHNscXRnb2ZpdmxjZHlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxODc1MTAsImV4cCI6MjA5MDc2MzUxMH0.QcPHGGF4HRzKWCv0CgEg2qh7vcbEsLLJd4Xh7LIYE4Y', 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlaGtveHNscXRnb2ZpdmxjZHlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxODc1MTAsImV4cCI6MjA5MDc2MzUxMH0.QcPHGGF4HRzKWCv0CgEg2qh7vcbEsLLJd4Xh7LIYE4Y' },
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_PUBLISHABLE_KEY },
         body: JSON.stringify({
           type: 'verified',
           user_id: userId,
