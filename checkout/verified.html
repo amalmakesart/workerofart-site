@@ -233,8 +233,11 @@
         document.getElementById('payment-section').style.display = 'none';
         document.getElementById('success-screen').style.display = 'block';
         // Tell the app payment succeeded (if opened in WebView)
+        const msg = JSON.stringify({ type: 'verified_success', user_id: userId });
         if (window.ReactNativeWebView) {
-          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'verified_success', user_id: userId }));
+          window.ReactNativeWebView.postMessage(msg);
+        } else {
+          window.parent.postMessage(msg, '*');
         }
       }
     } catch (err) {

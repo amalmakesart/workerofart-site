@@ -232,13 +232,16 @@
       } else {
         document.getElementById('payment-section').style.display = 'none';
         document.getElementById('success-screen').style.display = 'block';
-        if (window.ReactNativeWebView) {
-          window.ReactNativeWebView.postMessage(JSON.stringify({
+        const msg = JSON.stringify({
             type: 'gig_payment_success',
             user_id: userId,
             gig_id: gigId,
             is_featured: currentTier === 'featured',
-          }));
+          });
+        if (window.ReactNativeWebView) {
+          window.ReactNativeWebView.postMessage(msg);
+        } else {
+          window.parent.postMessage(msg, '*');
         }
       }
     } catch (err) {

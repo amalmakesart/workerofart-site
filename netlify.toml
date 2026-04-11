@@ -1,0 +1,8 @@
+# Proxy /app/* to the Next.js web app (deployed as a separate Netlify site)
+# Replace YOUR-APP-SITE with the actual Netlify subdomain of your woa-web deployment
+[[redirects]]
+  from = "/app/*"
+  to = "https://creative-squirrel-e11cf3.netlify.app/:splat"
+  status = 200
+  force = true
+  headers = {X-From-Netlify = "true"}
